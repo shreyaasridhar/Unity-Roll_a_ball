@@ -63,6 +63,7 @@
     <Compile Include="Assets\Scripts\CameraController.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
     <Compile Include="Assets\Scripts\Rotator.cs" />
+    <Compile Include="Assets\Scripts\ServerObject.cs" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>/Users/shreyaasridhar/Programs/Unity/Roll a ball/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
@@ -290,6 +291,12 @@
     </Reference>
     <Reference Include="Unity.Analytics.StandardEvents">
       <HintPath>/Users/shreyaasridhar/Programs/Unity/Roll a ball/Library/PackageCache/com.unity.analytics@3.2.2/Unity.Analytics.StandardEvents.dll</HintPath>
+    </Reference>
+    <Reference Include="AsyncIO">
+      <HintPath>/Users/shreyaasridhar/Programs/Unity/Roll a ball/Assets/AsyncIO.dll</HintPath>
+    </Reference>
+    <Reference Include="NetMQ">
+      <HintPath>/Users/shreyaasridhar/Programs/Unity/Roll a ball/Assets/NetMQ.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
       <HintPath>/Applications/Unity/Unity.app/Contents/NetStandard/ref/2.0.0/netstandard.dll</HintPath>
