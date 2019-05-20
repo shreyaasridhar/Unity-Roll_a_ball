@@ -4,13 +4,25 @@ import time
 from  datetime import datetime
 import numpy as np
 from sklearn.decomposition import PCA
+time.sleep(2) # buffer for 2 seconds [wait to start the game]
+
+s = datetime.now()
+
+#--------------- send PCA back to Unity
+
+context1 = zmq.Context()
+socket1 = context1.socket(zmq.PUB)
+socket1.bind("tcp://*:12345")
+
 
 def do_PCA(pos,ct):
 	print("Calculating PCA")
 	data = pos[:ct,:]
-	ipca = PCA(n_components=3, svd_solver='full') #arpack
+	ipca = PCA(n_components=3, svd_solver='full') #arpack, full
 	ipca.fit(data)
-	print(ipca.transform(data))
+	message = ipca.transform(data)
+	print(message)
+	socket1.send_string(str(message))# can send str or unicode
 	#print(ipca.get_covariance(data))
 	return None
 
@@ -24,7 +36,7 @@ n = 5 # total second amount for data block
 ct = 0 # index  for pos
 pos = np.zeros([n*3000,3])
 
-s = datetime.now()
+
 while True:
 	socket.send_string("request")
 	poller = zmq.Poller()
@@ -38,7 +50,6 @@ while True:
 			chars = response.decode("utf-8")
 			pos[ct] = list(map(float,chars.split(" ")))
 			ct += 1
-
 
 			if (datetime.now() - s).total_seconds() >= n:
 				do_PCA(pos,ct)
