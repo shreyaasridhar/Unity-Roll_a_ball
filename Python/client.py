@@ -19,8 +19,8 @@ def do_PCA(pos,ct):
 	print("Calculating PCA")
 	data = pos[:ct,:]
 	ipca = PCA(n_components=3, svd_solver='full') #arpack, full
-	ipca.fit(data)
-	message = ipca.transform(data)
+	ipca.fit(data) # ipca.transform(data)
+	message = ipca.components_
 	print(message)
 	socket1.send_string(str(message))# can send str or unicode
 	#print(ipca.get_covariance(data))
