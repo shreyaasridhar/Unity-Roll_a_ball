@@ -79,16 +79,36 @@ public class NetMqListener
 public class PCA_arrows : MonoBehaviour
 {
     private NetMqListener _netMqListener;
+    private Transform waypointArrow; //Transform used to reference the Waypoint Arrow
+    private Transform currentWaypoint; //Transforms used to identify the Waypoint Arrow's target
+    private Transform arrowTarget;
+    [Range(0.0001f, 20)] public float arrowTargetSmooth; // controls how fast the arrow should smoothly target the next waypoint
 
     private void HandleMessage(string message)
     {
+        Debug.Log(message+'\n'+message.Substring(1,(message.Length-2)));
+        while (message.IndexOf('[') == 0) {
+            var splittedStrings = message.Split(' ');
+            if (splittedStrings.Length != 3) return;
+            var x = float.Parse(splittedStrings[0]);
+            var y = float.Parse(splittedStrings[1]);
+            var z = float.Parse(splittedStrings[2]);
+            //transform.position = new Vector3(x, y, z);
+            //Keep the Waypoint Arrow pointed at the Current Waypoint
+            if (arrowTarget != null)
+            {
+                arrowTarget.localPosition = Vector3.Lerp(arrowTarget.localPosition, currentWaypoint.localPosition, arrowTargetSmooth * Time.deltaTime);
+                arrowTarget.localRotation = Quaternion.Lerp(arrowTarget.localRotation, currentWaypoint.localRotation, arrowTargetSmooth * Time.deltaTime);
+            }
+            else
+            {
+                arrowTarget = currentWaypoint;
+            }
+            if (waypointArrow == null)
+                FindArrow();
+            waypointArrow.LookAt(arrowTarget);
+        }
 
-        var splittedStrings = message.Split(' ');
-        if (splittedStrings.Length != 3) return;
-        var x = float.Parse(splittedStrings[0]);
-        var y = float.Parse(splittedStrings[1]);
-        var z = float.Parse(splittedStrings[2]);
-        //transform.position = new Vector3(x, y, z);
     }
 
     private void Start()
@@ -106,4 +126,25 @@ public class PCA_arrows : MonoBehaviour
     {
         _netMqListener.Stop();
     }
+    public void CreateArrow()
+    {
+        GameObject instance = Instantiate(Resources.Load("Waypoint Arrow", typeof(GameObject))) as GameObject;
+        instance.name = "Waypoint Arrow";
+        instance = null;
+    }
+
+    public void FindArrow()
+    {
+        GameObject arrow = GameObject.Find("Waypoint Arrow");
+        if (arrow == null)
+        {
+            CreateArrow();
+            waypointArrow = GameObject.Find("Waypoint Arrow").transform;
+        }
+        else
+        {
+            waypointArrow = arrow.transform;
+        }
+    }
+
 }

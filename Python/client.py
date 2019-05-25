@@ -18,11 +18,17 @@ socket1.bind("tcp://*:12345")
 def do_PCA(pos,ct):
 	print("Calculating PCA")
 	data = pos[:ct,:]
+	centroid = []
+	centroid.append(np.sum(pos[:,0])/ct)
+	centroid.append(np.sum(pos[:,1])/ct)
+	centroid.append(np.sum(pos[:,2])/ct)
 	ipca = PCA(n_components=3, svd_solver='full') #arpack, full
 	ipca.fit(data) # ipca.transform(data)
 	message = ipca.components_
 	print(message)
 	socket1.send_string(str(message))# can send str or unicode
+	print(centroid)
+	socket1.send_string(str(centroid)) #send the centroid coordinates
 	#print(ipca.get_covariance(data))
 	return None
 
