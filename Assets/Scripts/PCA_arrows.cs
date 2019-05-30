@@ -5,7 +5,8 @@ using UnityEngine;
 using NetMQ.Sockets;
 using System.Collections.Concurrent;
 using System.Threading;
-
+using System.Text.RegularExpressions;
+using TMPro;
 
 public class NetMqListener
 {
@@ -79,37 +80,76 @@ public class NetMqListener
 public class PCA_arrows : MonoBehaviour
 {
     private NetMqListener _netMqListener;
-    private Transform waypointArrow; //Transform used to reference the Waypoint Arrow
-    private Transform currentWaypoint; //Transforms used to identify the Waypoint Arrow's target
-    private Transform arrowTarget;
-    [Range(0.0001f, 20)] public float arrowTargetSmooth; // controls how fast the arrow should smoothly target the next waypoint
 
+    //-------------------------------------------------------------------------
     private void HandleMessage(string message)
     {
-        Debug.Log(message+'\n'+message.Substring(1,(message.Length-2)));
-        while (message.IndexOf('[') == 0) {
-            var splittedStrings = message.Split(' ');
-            if (splittedStrings.Length != 3) return;
-            var x = float.Parse(splittedStrings[0]);
-            var y = float.Parse(splittedStrings[1]);
-            var z = float.Parse(splittedStrings[2]);
-            //transform.position = new Vector3(x, y, z);
-            //Keep the Waypoint Arrow pointed at the Current Waypoint
-            if (arrowTarget != null)
-            {
-                arrowTarget.localPosition = Vector3.Lerp(arrowTarget.localPosition, currentWaypoint.localPosition, arrowTargetSmooth * Time.deltaTime);
-                arrowTarget.localRotation = Quaternion.Lerp(arrowTarget.localRotation, currentWaypoint.localRotation, arrowTargetSmooth * Time.deltaTime);
-            }
-            else
-            {
-                arrowTarget = currentWaypoint;
-            }
-            if (waypointArrow == null)
-                FindArrow();
-            waypointArrow.LookAt(arrowTarget);
+        //Debug.Log(message+'\n'+message.Substring(1,(message.Length-2)));
+        Debug.Log("Inside Handle Message, Recieving Data\n");
+        //string[] liness = Regex.Split(message, "\n");
+        var liness = new List<string>(Regex.Split(message, "\n"));
+        List<Vector3> ips = new List<Vector3>();
+
+        //Debug.Log("Count Liness is  "+ liness.Count);  //checked
+        foreach (string l in liness)
+        {
+            //print(l);
+            var splittedStrings = l.Substring(1, l.Length - 2).Split(' ');
+            //var splittedStrings = l.Split(' ');
+
+            List<string> splitstringnew = new List<string>(splittedStrings);
+            splitstringnew.RemoveAll(str => string.IsNullOrEmpty(str));
+            Debug.Log("FOR EACH LOOP, the length of string   " + ips.Count);
+            if (splitstringnew.Count != 3) return;
+        
+            var x = float.Parse(splitstringnew[0]);
+            var y = float.Parse(splitstringnew[1]);
+            var z = float.Parse(splitstringnew[2]);
+            ips.Add(new Vector3(x, y, z));
         }
+        Debug.Log("printing the arrow1!!!!!!!!!!!!");
+        var xyz = DrawPCAComponentsXYZ(ips[0], ips.GetRange(1, ips.Count - 1));
+        Debug.Log("returned");
+        //Destroy(xyz);
+
 
     }
+    public GameObject DrawPCAComponentsXYZ(Vector3 origin, List<Vector3> endpoints)
+    {
+        Debug.Log("Creating arrows...\n");
+        var ct = 1;
+        var parent_obj = new GameObject();
+        foreach (var endpoint in endpoints)
+        {
+            var arrow = DrawArrow(origin, endpoint, "PCA" + ct);
+            arrow.transform.SetParent(parent_obj.transform);
+            ct += 1;
+        }
+        return parent_obj;
+    }
+
+    public GameObject DrawArrow(Vector3 origin, Vector3 vectorEndpoint, string principalComponentName)
+    {
+        var lineObject = new GameObject();
+        lineObject.transform.SetParent(transform);
+        var textObject = new GameObject();
+        textObject.transform.SetParent(lineObject.transform);
+        LineRenderer lineRenderer = lineObject.gameObject.AddComponent<LineRenderer>();
+        TextMeshPro endpointText = textObject.gameObject.AddComponent<TextMeshPro>();
+        endpointText.fontSize = 3.0f;
+        endpointText.text = $"{principalComponentName}\n{vectorEndpoint.ToString()}";
+        endpointText.alignment = TextAlignmentOptions.Center;
+        endpointText.transform.position = vectorEndpoint + vectorEndpoint.normalized * 0.5f;
+        endpointText.color = Color.white;
+        lineRenderer.SetWidth(0.01F, 0.04F);
+        lineRenderer.SetVertexCount(2);
+        Vector3[] positionArray = new[] { origin, vectorEndpoint };
+        lineRenderer.SetPositions(positionArray);
+        return lineObject;
+    }
+
+
+    //-------------------------------------------------------------------------
 
     private void Start()
     {
@@ -126,25 +166,6 @@ public class PCA_arrows : MonoBehaviour
     {
         _netMqListener.Stop();
     }
-    public void CreateArrow()
-    {
-        GameObject instance = Instantiate(Resources.Load("Waypoint Arrow", typeof(GameObject))) as GameObject;
-        instance.name = "Waypoint Arrow";
-        instance = null;
-    }
 
-    public void FindArrow()
-    {
-        GameObject arrow = GameObject.Find("Waypoint Arrow");
-        if (arrow == null)
-        {
-            CreateArrow();
-            waypointArrow = GameObject.Find("Waypoint Arrow").transform;
-        }
-        else
-        {
-            waypointArrow = arrow.transform;
-        }
-    }
 
 }

@@ -4,7 +4,7 @@ import time
 from  datetime import datetime
 import numpy as np
 from sklearn.decomposition import PCA
-
+n = 5 # total second amount for data block
 s = datetime.now()
 
 #---- Sending PCA back to Unity ----------
@@ -44,7 +44,6 @@ socket.connect("tcp://localhost:12346")
 #---- GETTING DATA FROM Unity ----------
 TIMEOUT = 10000
 
-n = 5 # total second amount for data block
 ct = 0 # index  for pos
 pos = np.zeros([n*3000,3])
 
