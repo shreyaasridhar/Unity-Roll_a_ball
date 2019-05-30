@@ -108,6 +108,7 @@ public class PCA_arrows : MonoBehaviour
         }
         Debug.Log("printing the arrow1!!!!!!!!!!!!");
         var xyz = DrawPCAComponentsXYZ(ips[0], ips.GetRange(1, ips.Count - 1));
+        Destroy(xyz, 5);
         Debug.Log("returned");
         //Destroy(xyz);
 
@@ -135,13 +136,14 @@ public class PCA_arrows : MonoBehaviour
         textObject.transform.SetParent(lineObject.transform);
         LineRenderer lineRenderer = lineObject.gameObject.AddComponent<LineRenderer>();
         TextMeshPro endpointText = textObject.gameObject.AddComponent<TextMeshPro>();
-        endpointText.fontSize = 3.0f;
+        endpointText.fontSize = 5.0f;
         endpointText.text = $"{principalComponentName}\n{vectorEndpoint.ToString()}";
         endpointText.alignment = TextAlignmentOptions.Center;
         endpointText.transform.position = vectorEndpoint + vectorEndpoint.normalized * 0.5f;
+        //endpointText.transform.rotation = Quaternion.LookRotation();
         endpointText.color = Color.white;
-        lineRenderer.startWidth = 0.01F;
-        lineRenderer.endWidth = 0.04F;
+        lineRenderer.startWidth = 0.04F;
+        lineRenderer.endWidth = 0.07F;
         lineRenderer.positionCount = 2;
         Vector3[] positionArray = new[] { origin, vectorEndpoint };
         lineRenderer.SetPositions(positionArray);
