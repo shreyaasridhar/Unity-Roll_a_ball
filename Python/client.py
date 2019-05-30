@@ -4,30 +4,30 @@ import time
 from  datetime import datetime
 import numpy as np
 from sklearn.decomposition import PCA
-# time.sleep(2) # buffer for 2 seconds [wait to start the game]
 
 s = datetime.now()
 
-#--------------- send PCA back to Unity
-
+#---- Sending PCA back to Unity ----------
 context1 = zmq.Context()
 socket1 = context1.socket(zmq.PUB)
 socket1.bind("tcp://*:12345")
 
-
-
 def do_PCA(pos,ct):
 	print("Calculating PCA")
 	data = pos[:ct,:]
+
 	# Compute PCA
 	ipca = PCA(n_components=3, svd_solver='full')
 	ipca.fit(data) # ipca.transform(data)
 	PCA_vectors = ipca.components_
-	print('PCA_vectors', PCA_vectors)
+	#print('PCA_vectors', PCA_vectors)
+
 	# Compute magnitude
 	eigenvalues = ipca.explained_variance_
 
+	# Compute centroid
 	centroid = ipca.mean_
+
 	end_points = []
 	for length, vector in zip(eigenvalues, PCA_vectors):
 		v = vector * 3 * np.sqrt(length)
@@ -41,15 +41,15 @@ context = zmq.Context()
 socket = context.socket(zmq.REQ)
 socket.connect("tcp://localhost:12346")
 
+#---- GETTING DATA FROM Unity ----------
 TIMEOUT = 10000
 
-n = 7 # total second amount for data block
+n = 5 # total second amount for data block
 ct = 0 # index  for pos
 pos = np.zeros([n*3000,3])
 
 print("Instantiated")
 while True:
-
 	socket.send_string("request")
 	poller = zmq.Poller()
 	poller.register(socket, zmq.POLLIN)
@@ -78,4 +78,3 @@ while True:
 	socket.close()
 	socket = context.socket(zmq.REQ)
 	socket.connect("tcp://localhost:12346")
-
