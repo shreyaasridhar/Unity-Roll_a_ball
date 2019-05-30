@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using NetMQ;
 using UnityEngine;
 using NetMQ.Sockets;
@@ -141,8 +140,9 @@ public class PCA_arrows : MonoBehaviour
         endpointText.alignment = TextAlignmentOptions.Center;
         endpointText.transform.position = vectorEndpoint + vectorEndpoint.normalized * 0.5f;
         endpointText.color = Color.white;
-        lineRenderer.SetWidth(0.01F, 0.04F);
-        lineRenderer.SetVertexCount(2);
+        lineRenderer.startWidth = 0.01F;
+        lineRenderer.endWidth = 0.04F;   // SetWidth(0.01F, 0.04F);
+        lineRenderer.positionCount = 2;  // SetVertexCount(2);
         Vector3[] positionArray = new[] { origin, vectorEndpoint };
         lineRenderer.SetPositions(positionArray);
         return lineObject;
