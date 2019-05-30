@@ -4,7 +4,7 @@ import time
 from  datetime import datetime
 import numpy as np
 from sklearn.decomposition import PCA
-time.sleep(2) # buffer for 2 seconds [wait to start the game]
+# time.sleep(2) # buffer for 2 seconds [wait to start the game]
 
 s = datetime.now()
 
@@ -15,21 +15,26 @@ socket1 = context1.socket(zmq.PUB)
 socket1.bind("tcp://*:12345")
 
 
+
 def do_PCA(pos,ct):
 	print("Calculating PCA")
 	data = pos[:ct,:]
-	centroid = []
-	centroid.append(np.sum(pos[:,0])/ct)
-	centroid.append(np.sum(pos[:,1])/ct)
-	centroid.append(np.sum(pos[:,2])/ct)
-	ipca = PCA(n_components=3, svd_solver='full') #arpack, full
+	# Compute PCA
+	ipca = PCA(n_components=3, svd_solver='full')
 	ipca.fit(data) # ipca.transform(data)
-	message = ipca.components_
+	PCA_vectors = ipca.components_
+	print('PCA_vectors', PCA_vectors)
+	# Compute magnitude
+	eigenvalues = ipca.explained_variance_
+
+	centroid = ipca.mean_
+	end_points = []
+	for length, vector in zip(eigenvalues, PCA_vectors):
+		v = vector * 3 * np.sqrt(length)
+		end_points.append(v + centroid)
+	message = str(centroid) + "\n"+str(end_points[0])+"\n"+str(end_points[1])+"\n"+str(end_points[2])
+	socket1.send_string(message)
 	print(message)
-	socket1.send_string(str(message))# can send str or unicode
-	print(centroid)
-	socket1.send_string(str(centroid)) #send the centroid coordinates
-	#print(ipca.get_covariance(data))
 	return None
 
 context = zmq.Context()
@@ -38,12 +43,13 @@ socket.connect("tcp://localhost:12346")
 
 TIMEOUT = 10000
 
-n = 5 # total second amount for data block
+n = 7 # total second amount for data block
 ct = 0 # index  for pos
 pos = np.zeros([n*3000,3])
 
-
+print("Instantiated")
 while True:
+
 	socket.send_string("request")
 	poller = zmq.Poller()
 	poller.register(socket, zmq.POLLIN)
@@ -58,10 +64,15 @@ while True:
 			ct += 1
 
 			if (datetime.now() - s).total_seconds() >= n:
-				do_PCA(pos,ct)
-				s = datetime.now()
-				pos = np.zeros([n * 3000, 3])
-				ct = 0
+				# if there isn't enough data in CT, don't jump into this if
+				if ct>3:
+					do_PCA(pos,ct)
+					s = datetime.now()
+					pos = np.zeros([n * 3000, 3])
+					ct = 0
+				else:
+					print("Not enough data nomnom")
+
 			continue
 	time.sleep(0.5)
 	socket.close()
